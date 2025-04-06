@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real-Time OS Security Event Logger</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0f172a;
+    }
+
+    .glow-text {
+      text-shadow: 0 0 4px #38bdf8, 0 0 8px rgba(56, 189, 248, 0.4);
+    }
+
+    .glass {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .pop-in {
+      animation: popIn 0.3s ease-out forwards;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-6 text-white">
+  <h1 class="text-4xl font-extrabold mb-6 glow-text text-center">
+    Real-Time OS Security Event Logger
+  </h1>
+
+  <div
+    id="eventFeed"
+    class="w-full max-w-3xl h-[480px] glass p-5 rounded-2xl shadow-xl overflow-y-auto space-y-4"
+  >
+    <p class="text-gray-400">Waiting for security events...</p>
+  </div>
+
+  <script>
+    const socket = new WebSocket("ws://localhost:3000");
+    const eventFeed = document.getElementById("eventFeed");
+
+    socket.onmessage = (message) => {
+      const data = JSON.parse(message.data);
+
+      const logItem = document.createElement("div");
+      logItem.className =
+        "p-4 bg-gray-800 rounded-xl border border-gray-600 shadow hover:shadow-lg transition-all pop-in";
+
+      logItem.innerHTML = `
+        <div class="text-sm text-gray-400 mb-1">${data.timestamp}</div>
+        <div class="text-base">
+          <span class="text-blue-400 font-medium">OS:</span> ${data.operatingSystem} |
+          <span class="text-yellow-400 font-medium">CPU:</span> ${data.cpuUsage} |
+          <span class="text-red-400 font-medium">Memory:</span> ${data.freeMemory}
+        </div>
+        <div class="mt-1">
+          <span class="text-pink-400 font-semibold">Event:</span>
+          <span class="text-white">${data.securityEvent}</span>
+        </div>
+      `;
+
+      eventFeed.querySelector("p")?.remove();
+      eventFeed.prepend(logItem);
+
+      if (eventFeed.scrollHeight > eventFeed.clientHeight) {
+        eventFeed.scrollTop = 0;
+      }
+    };
+  </script>
+</body>
+</html>
